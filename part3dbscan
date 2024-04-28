@@ -1,0 +1,70 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans, DBSCAN
+from sklearn.metrics import silhouette_score
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
+import numpy as np
+
+# Load the dataset
+data = pd.read_csv("Housing_categorized.csv")
+data2 = pd.read_csv("Housing_categorized2.csv")
+
+# Standardize features
+data = StandardScaler().fit_transform(data)
+
+
+# Define a function to perform DBSCAN clustering and visualize the results
+def dbscan_clustering(data, eps, min_samples):
+    dbscan = DBSCAN(eps=eps, min_samples=min_samples)
+    cluster_labels = dbscan.fit_predict(data)
+
+    # Plot clusters
+    plt.figure(figsize=(8, 6))
+    print(silhouette_score(data, cluster_labels))
+    plt.scatter(
+        data2["price_category"],
+        data2["price"],
+        c=cluster_labels,
+        alpha=0.5,
+    )
+    plt.title(f"DBSCAN Clustering with Eps={eps}, Min Samples={min_samples}")
+    plt.xlabel("Price Category")
+    plt.ylabel("True Price")
+    plt.colorbar(label="Cluster")
+    plt.show()
+
+
+# Define a function to perform DBSCAN clustering and visualize the results
+def dbscan_silhouette_score(data, eps, min_samples):
+    dbscan = DBSCAN(eps=eps, min_samples=min_samples)
+    cluster_labels = dbscan.fit_predict(data)
+
+    # Visualize clustering results using PCA (dimensionality reduction)
+    # Assuming the data has more than 2 features, we'll use PCA to reduce it to 2 dimensions for visualization
+    # If your data has only 2 features, you can skip PCA
+    # Perform PCA
+    pca = PCA(n_components=2)
+    data_pca = pca.fit_transform(data)
+
+    # Plot clusters
+    return silhouette_score(data, cluster_labels)
+
+
+# Plots the change in silhouette score for every eps value between mineps and maxeps
+def dbscan_plot_score(eps_values, min_samples=5):
+    scores = []
+    x = []
+    for eps in eps_values:
+        scores.append(dbscan_silhouette_score(data, eps, min_samples))
+        x.append(eps)
+
+    plt.plot(x, scores, "r")
+    plt.xlabel("eps")
+    plt.ylabel("silhouette score")
+    plt.title(f"Silhouette Score vs. eps with min_samples = {min_samples}")
+    plt.show()
+
+
+dbscan_clustering(data, 2.55, 3)

@@ -1,0 +1,81 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
+
+# Load the dataset
+data = pd.read_csv("Housing_categorized.csv")
+# Standardize features
+data = StandardScaler().fit_transform(data)
+
+# Only used to get the house prices
+data2 = pd.read_csv("Housing_categorized2.csv")
+
+# Set hyperparameters
+num_clusters = 3  # Number of clusters
+max_iterations = 100  # Maximum number of iterations for K-means
+
+
+def getSilhouette(n_clusters, max_iter=300):
+
+    kmeans = KMeans(
+        n_clusters=n_clusters,
+        max_iter=max_iterations,
+        random_state=35,
+        algorithm="lloyd",
+    )
+
+    # Fit KMeans to the data
+    kmeans.fit(data)
+
+    # Get cluster labels
+    cluster_labels = kmeans.labels_
+
+    # Evaluate clustering performance using silhouette score
+    silhouette_avg = silhouette_score(data, cluster_labels)
+    return silhouette_avg
+
+
+def plotRangeOfK():
+    silhouette_scores = []
+    x = []
+    for i in range(
+        2, 15
+    ):  # Start from 2 clusters as silhouette score requires at least 2 clusters
+        kmeans = KMeans(n_clusters=i, random_state=35)
+        kmeans.fit(data)
+        cluster_labels = kmeans.labels_
+        silhouette_avg = silhouette_score(data, cluster_labels)
+        silhouette_scores.append(silhouette_avg)
+        x.append(i)
+
+    plt.plot(x, silhouette_scores, marker="o")
+    plt.xlabel("Number of Clusters")
+    plt.ylabel("Silhouette Score")
+    plt.title("Silhouette Score vs. Number of Clusters")
+    plt.grid(True)
+    plt.show()
+
+
+# Plot the clusters
+def createPlot(K):
+    kmeans = KMeans(n_clusters=K, random_state=35)
+    kmeans.fit(data)
+    print(len(kmeans.labels_))
+    plt.figure(figsize=(8, 6))
+    plt.scatter(
+        data2["price_category"],
+        data2["price"],
+        c=kmeans.labels_,
+        alpha=0.5,
+    )
+    plt.title(f"DBSCAN Clustering with K={K}")
+    plt.xlabel("Price Category")
+    plt.ylabel("True Price")
+    plt.colorbar(label="Cluster")
+    plt.show()
+
+
+createPlot(3)
